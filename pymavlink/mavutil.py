@@ -500,6 +500,8 @@ class mavfile(object):
                         mavlink.MAV_TYPE_COAXIAL,
                         mavlink.MAV_TYPE_TRICOPTER]:
             map = mode_mapping_acm
+        if mav_type == mavlink.MAV_TYPE_SUBMARINE:
+            map = mode_mapping_sub
         if mav_type == mavlink.MAV_TYPE_FIXED_WING:
             map = mode_mapping_apm
         if mav_type == mavlink.MAV_TYPE_GROUND_ROVER:
@@ -1429,6 +1431,27 @@ mode_mapping_acm = {
     18 : 'THROW',
     19 : 'AVOID_ADSB',
     }
+    
+mode_mapping_sub = {
+    0 : 'STABILIZE',
+    1 : 'ACRO',
+    2 : 'ALT_HOLD',
+    3 : 'AUTO',
+    4 : 'GUIDED',
+    5 : 'LOITER',
+    6 : 'RTL',
+    7 : 'CIRCLE',
+    9 : 'LAND',
+    10 : 'OF_LOITER',
+    11 : 'DRIFT',
+    13 : 'SPORT',
+    14 : 'FLIP',
+    15 : 'AUTOTUNE',
+    16 : 'POSHOLD',
+    17 : 'BRAKE',
+    18 : 'THROW',
+    }
+        
 mode_mapping_rover = {
     0 : 'MANUAL',
     2 : 'LEARNING',
@@ -1466,6 +1489,8 @@ def mode_mapping_byname(mav_type):
                     mavlink.MAV_TYPE_COAXIAL,
                     mavlink.MAV_TYPE_TRICOPTER]:
         map = mode_mapping_acm
+    if mav_type == mavlink.MAV_TYPE_SUBMARINE:
+        map = mode_mapping_sub
     if mav_type == mavlink.MAV_TYPE_FIXED_WING:
         map = mode_mapping_apm
     if mav_type == mavlink.MAV_TYPE_GROUND_ROVER:
@@ -1487,6 +1512,8 @@ def mode_mapping_bynumber(mav_type):
                     mavlink.MAV_TYPE_COAXIAL,
                     mavlink.MAV_TYPE_TRICOPTER]:
         map = mode_mapping_acm
+    if mav_type == mavlink.MAV_TYPE_SUBMARINE:
+        map = mode_mapping_sub
     if mav_type == mavlink.MAV_TYPE_FIXED_WING:
         map = mode_mapping_apm
     if mav_type == mavlink.MAV_TYPE_GROUND_ROVER:
@@ -1508,6 +1535,9 @@ def mode_string_v10(msg):
                      mavlink.MAV_TYPE_HELICOPTER ]:
         if msg.custom_mode in mode_mapping_acm:
             return mode_mapping_acm[msg.custom_mode]
+    if msg.type == mavlink.MAV_TYPE_SUBMARINE:
+        if msg.custom_mode in mode_mapping_sub:
+            return mode_mapping_sub[msg.custom_mode]
     if msg.type == mavlink.MAV_TYPE_FIXED_WING:
         if msg.custom_mode in mode_mapping_apm:
             return mode_mapping_apm[msg.custom_mode]
