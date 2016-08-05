@@ -1,0 +1,197 @@
+<?xml version='1.0'?>
+<mavlink>
+  <messages>
+    <message id="1001" name="TESTXX">
+      <description>testxx</description>
+      <field type="uint8_t" name="target_system">system id of the target</field>
+      <field type="uint8_t" name="target_component">component ID of the target</field>
+      <field type="uint8_t" name="xx">xx</field>
+    </message>
+        <message id="181" name="BATTERY2">
+            <description>2nd Battery status</description>
+            <field name="voltage" type="uint16_t">voltage in millivolts</field>
+            <field name="current_battery" type="int16_t">Battery current, in 10*milliamperes (1 = 10 milliampere), -1: autopilot does not measure the current</field>
+        </message>
+
+        <message id="182" name="AHRS3">
+            <description>Status of third AHRS filter if available. This is for ANU research group (Ali and Sean)</description>
+            <field name="roll" type="float">Roll angle (rad)</field>
+            <field name="pitch" type="float">Pitch angle (rad)</field>
+            <field name="yaw" type="float">Yaw angle (rad)</field>
+            <field name="altitude" type="float">Altitude (MSL)</field>
+            <field name="lat" type="int32_t">Latitude in degrees * 1E7</field>
+            <field name="lng" type="int32_t">Longitude in degrees * 1E7</field>
+            <field name="v1" type="float">test variable1</field>
+            <field name="v2" type="float">test variable2</field>
+            <field name="v3" type="float">test variable3</field>
+            <field name="v4" type="float">test variable4</field>
+        </message>
+
+        <message id="183" name="AUTOPILOT_VERSION_REQUEST">
+            <description>Request the autopilot version from the system/component.</description>
+            <field name="target_system" type="uint8_t">System ID</field>
+            <field name="target_component" type="uint8_t">Component ID</field>
+        </message>
+
+        <!-- remote log messages -->
+        <message id="184" name="REMOTE_LOG_DATA_BLOCK">
+            <description>Send a block of log data to remote location</description>
+            <field name="target_system" type="uint8_t">System ID</field>
+            <field name="target_component" type="uint8_t">Component ID</field>
+            <field enum="MAV_REMOTE_LOG_DATA_BLOCK_COMMANDS" name="seqno" type="uint32_t">log data block sequence number</field>
+            <field name="data" type="uint8_t[200]">log data block</field>
+        </message>
+
+        <message id="185" name="REMOTE_LOG_BLOCK_STATUS">
+            <description>Send Status of each log block that autopilot board might have sent</description>
+            <field name="target_system" type="uint8_t">System ID</field>
+            <field name="target_component" type="uint8_t">Component ID</field>
+            <field name="seqno" type="uint32_t">log data block sequence number</field>
+            <field enum="MAV_REMOTE_LOG_DATA_BLOCK_STATUSES" name="status" type="uint8_t">log data block status</field>
+        </message>
+
+        <message id="186" name="LED_CONTROL">
+            <description>Control vehicle LEDs</description>
+            <field name="target_system" type="uint8_t">System ID</field>
+            <field name="target_component" type="uint8_t">Component ID</field>
+            <field name="instance" type="uint8_t">Instance (LED instance to control or 255 for all LEDs)</field>
+            <field name="pattern" type="uint8_t">Pattern (see LED_PATTERN_ENUM)</field>
+            <field name="custom_len" type="uint8_t">Custom Byte Length</field>
+            <field name="custom_bytes" type="uint8_t[24]">Custom Bytes</field>
+        </message>
+
+        <message id="191" name="MAG_CAL_PROGRESS">
+            <description>Reports progress of compass calibration.</description>
+            <field name="compass_id" type="uint8_t">Compass being calibrated</field>
+            <field name="cal_mask" type="uint8_t">Bitmask of compasses being calibrated</field>
+            <field name="cal_status" type="uint8_t">Status (see MAG_CAL_STATUS enum)</field>
+            <field name="attempt" type="uint8_t">Attempt number</field>
+            <field name="completion_pct" type="uint8_t">Completion percentage</field>
+            <field name="completion_mask" type="uint8_t[10]">Bitmask of sphere sections (see http://en.wikipedia.org/wiki/Geodesic_grid)</field>
+            <field name="direction_x" type="float">Body frame direction vector for display</field>
+            <field name="direction_y" type="float">Body frame direction vector for display</field>
+            <field name="direction_z" type="float">Body frame direction vector for display</field>
+        </message>
+
+        <message id="192" name="MAG_CAL_REPORT">
+            <description>Reports results of completed compass calibration. Sent until MAG_CAL_ACK received.</description>
+            <field name="compass_id" type="uint8_t">Compass being calibrated</field>
+            <field name="cal_mask" type="uint8_t">Bitmask of compasses being calibrated</field>
+            <field name="cal_status" type="uint8_t">Status (see MAG_CAL_STATUS enum)</field>
+            <field name="autosaved" type="uint8_t">0=requires a MAV_CMD_DO_ACCEPT_MAG_CAL, 1=saved to parameters</field>
+            <field name="fitness" type="float">RMS milligauss residuals</field>
+            <field name="ofs_x" type="float">X offset</field>
+            <field name="ofs_y" type="float">Y offset</field>
+            <field name="ofs_z" type="float">Z offset</field>
+            <field name="diag_x" type="float">X diagonal (matrix 11)</field>
+            <field name="diag_y" type="float">Y diagonal (matrix 22)</field>
+            <field name="diag_z" type="float">Z diagonal (matrix 33)</field>
+            <field name="offdiag_x" type="float">X off-diagonal (matrix 12 and 21)</field>
+            <field name="offdiag_y" type="float">Y off-diagonal (matrix 13 and 31)</field>
+            <field name="offdiag_z" type="float">Z off-diagonal (matrix 32 and 23)</field>
+        </message>
+
+        <!-- EKF status message from autopilot to GCS. -->
+        <message id="193" name="EKF_STATUS_REPORT">
+            <description>EKF Status message including flags and variances</description>
+            <field name="flags" type="uint16_t">Flags</field>
+            <!-- supported flags see EKF_STATUS_FLAGS enum -->
+            <field name="velocity_variance" type="float">Velocity variance</field>
+            <!-- below 0.5 is good, 0.5~0.79 is warning, 0.8 or higher is bad -->
+            <field name="pos_horiz_variance" type="float">Horizontal Position variance</field>
+            <field name="pos_vert_variance" type="float">Vertical Position variance</field>
+            <field name="compass_variance" type="float">Compass variance</field>
+            <field name="terrain_alt_variance" type="float">Terrain Altitude variance</field>
+        </message>
+
+        <!-- realtime PID tuning message -->
+        <message id="194" name="PID_TUNING">
+            <description>PID tuning information</description>
+            <field enum="PID_TUNING_AXIS" name="axis" type="uint8_t">axis</field>
+            <field name="desired" type="float">desired rate (degrees/s)</field>
+            <field name="achieved" type="float">achieved rate (degrees/s)</field>
+            <field name="FF" type="float">FF component</field>
+            <field name="P" type="float">P component</field>
+            <field name="I" type="float">I component</field>
+            <field name="D" type="float">D component</field>
+        </message>
+
+        <message id="200" name="GIMBAL_REPORT">
+            <description>3 axis gimbal mesuraments</description>
+            <field name="target_system" type="uint8_t">System ID</field>
+            <field name="target_component" type="uint8_t">Component ID</field>
+            <field name="delta_time" type="float">Time since last update (seconds)</field>
+            <field name="delta_angle_x" type="float">Delta angle X (radians)</field>
+            <field name="delta_angle_y" type="float">Delta angle Y (radians)</field>
+            <field name="delta_angle_z" type="float">Delta angle X (radians)</field>
+            <field name="delta_velocity_x" type="float">Delta velocity X (m/s)</field>
+            <field name="delta_velocity_y" type="float">Delta velocity Y (m/s)</field>
+            <field name="delta_velocity_z" type="float">Delta velocity Z (m/s)</field>
+            <field name="joint_roll" type="float">Joint ROLL (radians)</field>
+            <field name="joint_el" type="float">Joint EL (radians)</field>
+            <field name="joint_az" type="float">Joint AZ (radians)</field>
+        </message>
+
+        <message id="201" name="GIMBAL_CONTROL">
+            <description>Control message for rate gimbal</description>
+            <field name="target_system" type="uint8_t">System ID</field>
+            <field name="target_component" type="uint8_t">Component ID</field>
+            <field name="demanded_rate_x" type="float">Demanded angular rate X (rad/s)</field>
+            <field name="demanded_rate_y" type="float">Demanded angular rate Y (rad/s)</field>
+            <field name="demanded_rate_z" type="float">Demanded angular rate Z (rad/s)</field>
+        </message>
+
+        <message id="214" name="GIMBAL_TORQUE_CMD_REPORT">
+            <description>100 Hz gimbal torque command telemetry</description>
+            <field name="target_system" type="uint8_t">System ID</field>
+            <field name="target_component" type="uint8_t">Component ID</field>
+            <field name="rl_torque_cmd" type="int16_t">Roll Torque Command</field>
+            <field name="el_torque_cmd" type="int16_t">Elevation Torque Command</field>
+            <field name="az_torque_cmd" type="int16_t">Azimuth Torque Command</field>
+        </message>
+
+        <!-- GoPro Messages -->
+        <message id="215" name="GOPRO_HEARTBEAT">
+            <description>Heartbeat from a HeroBus attached GoPro</description>
+            <field enum="GOPRO_HEARTBEAT_STATUS" name="status" type="uint8_t">Status</field>
+            <field enum="GOPRO_CAPTURE_MODE" name="capture_mode" type="uint8_t">Current capture mode</field>
+            <field name="flags" type="uint8_t">additional status bits</field>
+            <!-- see GOPRO_HEARTBEAT_FLAGS -->
+        </message>
+
+        <message id="216" name="GOPRO_GET_REQUEST">
+            <description>Request a GOPRO_COMMAND response from the GoPro</description>
+            <field name="target_system" type="uint8_t">System ID</field>
+            <field name="target_component" type="uint8_t">Component ID</field>
+            <field enum="GOPRO_COMMAND" name="cmd_id" type="uint8_t">Command ID</field>
+        </message>
+
+        <message id="217" name="GOPRO_GET_RESPONSE">
+            <description>Response from a GOPRO_COMMAND get request</description>
+            <field enum="GOPRO_COMMAND" name="cmd_id" type="uint8_t">Command ID</field>
+            <field enum="GOPRO_REQUEST_STATUS" name="status" type="uint8_t">Status</field>
+            <field name="value" type="uint8_t[4]">Value</field>
+        </message>
+
+        <message id="218" name="GOPRO_SET_REQUEST">
+            <description>Request to set a GOPRO_COMMAND with a desired</description>
+            <field name="target_system" type="uint8_t">System ID</field>
+            <field name="target_component" type="uint8_t">Component ID</field>
+            <field enum="GOPRO_COMMAND" name="cmd_id" type="uint8_t">Command ID</field>
+            <field name="value" type="uint8_t[4]">Value</field>
+        </message>
+
+        <message id="219" name="GOPRO_SET_RESPONSE">
+            <description>Response from a GOPRO_COMMAND set request</description>
+            <field enum="GOPRO_COMMAND" name="cmd_id" type="uint8_t">Command ID</field>
+            <field enum="GOPRO_REQUEST_STATUS" name="status" type="uint8_t">Status</field>
+        </message>
+
+        <!-- 219 to 224 RESERVED for more GOPRO-->
+        <message id="226" name="RPM">
+            <description>RPM sensor output</description>
+            <field name="rpm1" type="float">RPM Sensor1</field>
+            <field name="rpm2" type="float">RPM Sensor2</field>
+        </message>
+  </messages>
+</mavlink>
