@@ -8,9 +8,15 @@ from datetime import datetime
 
 # Connect to UDP endpoint (and wait for default attributes to accumulate)
 
-vehicle = connect('/dev/ttyACM1', wait_ready = True)
+vehicle = connect('/dev/ttyACM0', wait_ready = True)
 #vehicle = connect('/dev/tty.usbmodem1')
-vehicle.mode = VehicleMode("AUTO")
+vehicle.mode = VehicleMode("ALT_HOLD")
+
+#Create a message listener for all messages.
+@vehicle.on_message('*')
+def listener(self, name, message):
+    print 'message: %s' % message
+
 
 #global vehicle
 
@@ -89,10 +95,12 @@ def arm_and_takeoff(aTargetAltitude):
     # Copter should arm in GUIDED mode
     # vehicle.mode = VehicleMode("GUIDED")
     vehicle.armed = True
+    '''
     # Confirm vehicle armed before attempting to take off
     while not vehicle.armed:
         print " Waiting for arming..."
         time.sleep(1)
+    '''
     print "Taking off!"
     vehicle.simple_takeoff(aTargetAltitude) # Take off to target altitude
 
