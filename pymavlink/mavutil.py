@@ -1450,6 +1450,7 @@ mode_mapping_sub = {
     16 : 'POSHOLD',
     17 : 'BRAKE',
     18 : 'THROW',
+    19 : 'MANUAL'
     }
         
 mode_mapping_rover = {
