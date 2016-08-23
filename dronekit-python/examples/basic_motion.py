@@ -10,6 +10,7 @@ def yaw_right(vehicle, speed, duration):
     if (speed >= 1100 or speed <= 1900):
         vehicle.channels.overrides = {'1':1500, '2':1500, '3':1500, '4':1500, '5':1100, '6':speed, '7':1500, '8':1500}
         time.sleep(duration)
+        channel_initial_setting(vehicle)
     else:
         print("Speed should in the region of [1100, 1900]" )
 
@@ -20,6 +21,7 @@ def throttle_forward(vehicle, speed, duration):
     if (speed >= 1100 or speed <= 1900):
         vehicle.channels.overrides = {'1':1500, '2':1500, '3':1500, '4':speed, '5':1100, '6':1500, '7':1500, '8':1500}
         time.sleep(duration)
+        channel_initial_setting(vehicle)
     else:
         print("Speed should in the region of [1100, 1900]" )
 
@@ -29,6 +31,7 @@ def strafe_right(vehicle, speed, duration):
     if (speed >= 1100 or speed <= 1900):
         vehicle.channels.overrides = {'1':1500, '2':1500, '3':1500, '4':1500, '5':1100, '6':1500, '7':speed, '8':1500}
         time.sleep(duration)
+        channel_initial_setting(vehicle)
     else:
         print("Speed should in the region of [1100, 1900]" )
 
@@ -38,5 +41,6 @@ def ascend(vehicle, speed, duration):
     if (speed >= 1100 or speed <= 1900):
         vehicle.channels.overrides = {'1':1500, '2':1500, '3':speed, '4':1500, '5':1100, '6':1500, '7':1500, '8':1500}
         time.sleep(duration)
+        channel_initial_setting(vehicle)
     else:
         print("Speed should in the region of [1100, 1900]" )
