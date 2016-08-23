@@ -14,10 +14,10 @@ while not connection:
     except:
         print ("Cannot connect to " + connection_string + index)
         index = str(int(index) + 1)
-    if index.__len__() >= 3:
+    if index.__len__() >= 2:
         exit()
 
-vehicle.mode = VehicleMode("ALT_HOLD")
+vehicle.mode = VehicleMode("MANUAL")
 
 # vehicle = connect('/dev/tty.usbmodem1', wait_ready = True) # '/dev/tty.usbmodem0'
 # vehicle = connect('/dev/ttyACM0', wait_ready = True) # '/dev/tty.usbmodem0'
@@ -37,15 +37,22 @@ def print_basic_vehicle_parameters(vehicle):
 
 # Get some vehicle attributes (state)
 print_basic_vehicle_parameters(vehicle)
-
+'''
 @vehicle.on_attribute('velocity')
 def attitude_listener(self, name, msg):
     print '---%s' % (msg)
     time.sleep(1)
+'''
 
+@vehicle.on_message('VELOCITY')
+def attitude_listener(self, name, msg):
+    print '---%s' % (msg)
+    time.sleep(5)
+
+'''
 while True:
     pass
-
+'''
 # Close vehicle object before exiting script
 vehicle.close()
 print("Completed")
