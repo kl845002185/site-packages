@@ -4,6 +4,7 @@ import time
 import urllib2
 from pymavlink import mavutil
 from datetime import datetime
+import basic_motion
 
 # TASK: Set up option parsing to get connection string
 import argparse
@@ -14,7 +15,7 @@ args = parser.parse_args()
 
 connection_string = args.connect
 sitl = None
-connection_to_vehicle = True
+connection_to_vehicle = False
 
 connection = False
 index = '0'
@@ -37,11 +38,11 @@ else:
         except:
             print ("Cannot connect to " + connection_string + index)
             index = str(int(index) + 1)
-        if index.__len__() >= 2:
+        if index.__len__() >= 3:
             exit()
 
 # vehicle = connect('192.168.2.2:14555', wait_ready = True)
-mode = "MANUAL"
+mode = "STABILIZE"
 vehicle.mode = VehicleMode(mode)
 
 
@@ -174,20 +175,17 @@ def square_path(DURATION):
 
 
 # TASK: Get all vehicle attributes (state)
-print_basic_vehicle_parameters(vehicle)
+#print_basic_vehicle_parameters(vehicle)
 print "Arming motors"
 vehicle.armed = True
 vehicle.mode = VehicleMode(mode)
 print " Armed: %s" % vehicle.armed
 
-vehicle.channels.overrides = {'1':1500, '2':1500, '3':1500, '4':1500, '5':1100, '6':1500, '7':1500, '8':1500}
+basic_motion.channel_initial_setting(vehicle)
+# vehicle.channels.overrides = {'1':1500, '2':1500, '3':1500, '4':1500, '5':1100, '6':1500, '7':1500, '8':1500}
+basic_motion.yaw_right(vehicle, speed = 1299, duration = 1)
+print("here")
 print " Channel overrides: %s" % vehicle.channels.overrides
-time.sleep(2)
-vehicle.channels.overrides = {'1':1500, '2':1500, '3':1500, '4':1500, '5':1100, '6':1250, '7':1500, '8':1500}
-time.sleep(3)
-vehicle.channels.overrides = {'1':1500, '2':1500, '3':1500, '4':1500, '5':1100, '6':1500, '7':1500, '8':1500}
-
-
 '''
 # TASK: Supervise the volatge and avoid over-discharging
 minimum_voltage = 11.1
@@ -217,10 +215,9 @@ while (not vehicle.armed):
     print " Waiting for arming..."
     time.sleep(1)
 '''
-# send_ned_velocity(0.5, 0, 0, 1)
-# send_ned_velocity(0, 0, 0, 1)
-# condition_yaw(90)
-# time.sleep(60)
+
+# condition_yaw(180)
+time.sleep(60)
 # TASK: Square path using velocity
 # square_path(1)  # DURITION
 
