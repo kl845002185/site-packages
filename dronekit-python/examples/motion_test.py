@@ -1,16 +1,19 @@
 from dronekit import connect, VehicleMode
 import sys
 import time
+import threading
 import urllib2
 from pymavlink import mavutil
 from datetime import datetime
-import basic_motion
+from motion_control import MotionControl
+
 
 # TASK: Set up option parsing to get connection string
 import argparse
 parser = argparse.ArgumentParser(description='Basic motion test for the BLueROV. ')
 parser.add_argument('--connect',
-                   help="Vehicle connection target string. If not specified, SITL automatically started and used.")
+                    help="""Vehicle connection target string. 
+                    If not specified, SITL automatically started and used.""")
 args = parser.parse_args()
 
 connection_string = args.connect
@@ -19,12 +22,13 @@ connection_to_vehicle = False
 
 connection = False
 index = '0'
-connection_string = '/dev/ttyACM'
+# connection_string = '/dev/ttyACM'
 # connection_string = '/dev/tty.usbmodem'
+
 
 # TASK: Start SITL if connection_to_vehicle is False
 # TASK: Connect to UDP endpoint (and wait for default attributes to accumulate)
-if not connection_to_vehicle:
+if not connection_to_ve
     import dronekit_sitl
     sitl = dronekit_sitl.start_default()
     connection_string = sitl.connection_string()
@@ -42,8 +46,8 @@ else:
             exit()
 
 # vehicle = connect('192.168.2.2:14555', wait_ready = True)
-mode = "STABILIZE"
-vehicle.mode = VehicleMode(mode)
+mode_string = "STABILIZE"
+vehicle.mode = VehicleMode(mode_string)
 
 
 '''
@@ -89,8 +93,8 @@ def arm_and_takeoff(aTargetAltitude):
     print "Taking off!"
     vehicle.simple_takeoff(aTargetAltitude) # Take off to target altitude
 
-    # Wait until the vehicle reaches a safe height before processing the goto (otherwise the command
-    #  after Vehicle.simple_takeoff will execute immediately).
+    # Wait until the vehicle reaches a safe height before processing the goto 
+    # (otherwise the command after Vehicle.simple_takeoff will execute immediately).
     while True:
         print " Altitude: ", vehicle.location.global_relative_frame.alt
         # Break and return from function just below target altitude.
@@ -174,38 +178,59 @@ def square_path(DURATION):
     send_ned_velocity(0, 0, 0, 1)
 
 
-# TASK: Get all vehicle attributes (state)
-#print_basic_vehicle_parameters(vehicle)
-print "Arming motors"
-vehicle.armed = True
-vehicle.mode = VehicleMode(mode)
-print " Armed: %s" % vehicle.armed
+def listen_on_trace(trace):
+    while not trace:
+        #print ("trace")
+        time.sleep(3)
+    motion_recall(vehicle, basic_motion.s)
 
-basic_motion.channel_initial_setting(vehicle)
-# vehicle.channels.overrides = {'1':1500, '2':1500, '3':1500, '4':1500, '5':1100, '6':1500, '7':1500, '8':1500}
-basic_motion.yaw_right(vehicle, speed = 1299, duration = 1)
-print("here")
-print " Channel overrides: %s" % vehicle.channels.overrides
-'''
-# TASK: Supervise the volatge and avoid over-discharging
+
+trace = False
+
+
+# TASK: Supervise the voltage and avoid over-discharging
+initial_voltage = vehicle.battery.voltage
 minimum_voltage = 11.1
+# t = threading.Thread(target=listen_on_trace(trace), name='ListenOnTrace')
+
 @vehicle.on_attribute('battery')
-def attitude_listener(self, name, msg):
+def battery_listener(self, name, msg):
     # print '---%s' % (msg)
-    time.sleep(3)
+    time.sleep(5)
+    if initial_voltage - vehicle.battery.voltage > vehicle.battery.voltage - minimum_voltage:
+        trace = input("Please recall the vehicle(True or False):\n")
+        if trace:
+            motion_recall(vehicle, basic_motion.s)
     if vehicle.battery.voltage < minimum_voltage:
         vehicle.armed = False
-        print "Battery volatge too low."
+        print "Battery voltage too low."
         exit()
-'''
+
+
+# TASK: Get all vehicle attributes (state)
+print_basic_vehicle_parameters(vehicle)
+
+
+# TASK: Motions control
+motion = MotionControl(vehicle)
+motion.arm(vehicle, mode)
+# vehicle.channels.overrides = {'1':1500, '2':1500, '3':1500, '4':1500, \
+#                               '5':1100, '6':1500, '7':1500, '8':1500}
+motion.yaw(vehicle, speed=35, duration=1)
+print " Channel overrides: %s" % vehicle.channels.overrides
+motion.motions_recall(vehicle, motion.s)
+
+
 '''
 @vehicle.on_message('RC_CHANNELS_RAW')
 def attitude_listener(self, name, msg):
     print '---%s' % (msg)
     time.sleep(3)
 '''
+
+
 # TASK: Stay in a stable attitude underwater
-original_attitude = vehicle.location.global_relative_frame.alt - 0.3
+# original_attitude = vehicle.location.global_relative_frame.alt - 0.3
 # arm_and_takeoff(original_attitude)
 
 
@@ -216,11 +241,12 @@ while (not vehicle.armed):
     time.sleep(1)
 '''
 
+
 # condition_yaw(180)
 time.sleep(60)
 # TASK: Square path using velocity
 # square_path(1)  # DURITION
 
-
+# t.join()
 vehicle.close()
 print "Finished all the tasks"
