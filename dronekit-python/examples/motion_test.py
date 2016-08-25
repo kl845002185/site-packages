@@ -18,17 +18,17 @@ args = parser.parse_args()
 
 connection_string = args.connect
 sitl = None
-connection_to_vehicle = False
+connection_to_vehicle = True
 
 connection = False
 index = '0'
-# connection_string = '/dev/ttyACM'
+connection_string = '/dev/ttyACM'
 # connection_string = '/dev/tty.usbmodem'
 
 
 # TASK: Start SITL if connection_to_vehicle is False
 # TASK: Connect to UDP endpoint (and wait for default attributes to accumulate)
-if not connection_to_ve
+if not connection_to_vehicle:
     import dronekit_sitl
     sitl = dronekit_sitl.start_default()
     connection_string = sitl.connection_string()
@@ -42,7 +42,7 @@ else:
         except:
             print ("Cannot connect to " + connection_string + index)
             index = str(int(index) + 1)
-        if index.__len__() >= 3:
+        if index.__len__() >= 2:
             exit()
 
 # vehicle = connect('192.168.2.2:14555', wait_ready = True)
@@ -56,7 +56,6 @@ vehicle.mode = VehicleMode(mode_string)
 def listener(self, name, message):
     print 'message: %s' % message
 '''
-
 
 def print_basic_vehicle_parameters(vehicle):
     print "Vehicle state:"
@@ -185,27 +184,39 @@ def listen_on_trace(trace):
     motion_recall(vehicle, basic_motion.s)
 
 
-trace = False
+trace = 'n'
+temp = 'n'
 
 
 # TASK: Supervise the voltage and avoid over-discharging
 initial_voltage = vehicle.battery.voltage
 minimum_voltage = 11.1
 # t = threading.Thread(target=listen_on_trace(trace), name='ListenOnTrace')
-
+"""
 @vehicle.on_attribute('battery')
 def battery_listener(self, name, msg):
     # print '---%s' % (msg)
     time.sleep(5)
+    '''
     if initial_voltage - vehicle.battery.voltage > vehicle.battery.voltage - minimum_voltage:
-        trace = input("Please recall the vehicle(True or False):\n")
-        if trace:
-            motion_recall(vehicle, basic_motion.s)
+        trace = input("Please recall the vehicle(y or n):\n")
+        if trace == 'y':
+            motion.motions_recall(vehicle, basic_motion.s)
+    '''
     if vehicle.battery.voltage < minimum_voltage:
-        vehicle.armed = False
         print "Battery voltage too low."
-        exit()
+        temp = input("Disarm and exit(y or n)?:\n")
+        if temp == 'y':
+            vehicle.armed = False
+            exit()
 
+@vehicle.on_attribute('attitude')
+def recall_asking(self, name, msg):
+    time.sleep(5)
+    trace = input("Recall the vehicle(y or n)?:\n")
+    if trace == 'y':
+        motion.motions_recall(vehicle, basic_motion.s)
+"""
 
 # TASK: Get all vehicle attributes (state)
 print_basic_vehicle_parameters(vehicle)
@@ -213,12 +224,12 @@ print_basic_vehicle_parameters(vehicle)
 
 # TASK: Motions control
 motion = MotionControl(vehicle)
-motion.arm(vehicle, mode)
+motion.arm(vehicle, mode_string)
 # vehicle.channels.overrides = {'1':1500, '2':1500, '3':1500, '4':1500, \
 #                               '5':1100, '6':1500, '7':1500, '8':1500}
 motion.yaw(vehicle, speed=35, duration=1)
-print " Channel overrides: %s" % vehicle.channels.overrides
-motion.motions_recall(vehicle, motion.s)
+# print " Channel overrides: %s" % vehicle.channels.overrides
+motion.motions_recall(vehicle, motion.motion_stack)
 
 
 '''
@@ -243,7 +254,7 @@ while (not vehicle.armed):
 
 
 # condition_yaw(180)
-time.sleep(60)
+time.sleep(10)
 # TASK: Square path using velocity
 # square_path(1)  # DURITION
 
