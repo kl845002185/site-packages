@@ -1,11 +1,16 @@
-from dronekit import connect, VehicleMode
+# Author: Yikai Wang
+# Date: Aug 2016
+# Function: Motion tests
+# Email: kl845002185@gmail.com
+
+from dronekit import connect, VehicleMode  # Needed for basic connection of mode setting
 import sys
 import time
 import threading
 import urllib2
 from pymavlink import mavutil
 from datetime import datetime
-from motion_control import MotionControl
+from motion_control import MotionControl  # Needed for motion control and trace memorizing.
 
 
 # TASK: Set up option parsing to get connection string
@@ -18,12 +23,15 @@ args = parser.parse_args()
 
 connection_string = args.connect
 sitl = None
-connection_to_vehicle = True
+connection_to_vehicle = True  # If you want to use simulator instead of real test, just change this to False.
 
 connection = False
 index = '0'
-connection_string = '/dev/ttyACM'
-# connection_string = '/dev/tty.usbmodem'
+
+# You can use "ls /dev" in the terminal to see what exactly the connection file is. 
+# (A new file appears when you plug in the pixhawk.)
+connection_string = '/dev/ttyACM'  # USB connection using raspberry pi
+# connection_string = '/dev/tty.usbmodem'  # USB connection using mac
 
 
 # TASK: Start SITL if connection_to_vehicle is False
@@ -34,7 +42,7 @@ if not connection_to_vehicle:
     connection_string = sitl.connection_string()
     vehicle = connect(connection_string, wait_ready = True)
 else:
-    while not connection:
+    while not connection:  # Use try and except, because the name of the USB connection file may change.
         try:
             vehicle = connect(connection_string + index, wait_ready = True)
             print ("Connect to " + connection_string + index)
@@ -42,11 +50,12 @@ else:
         except:
             print ("Cannot connect to " + connection_string + index)
             index = str(int(index) + 1)
-        if index.__len__() >= 2:
+        # If you still cannot find the file after 10 trials, there's something wrong with the pixhawk connection.
+        if index.__len__() >= 2:             
             exit()
 
-# vehicle = connect('192.168.2.2:14555', wait_ready = True)
-mode_string = "STABILIZE"
+# vehicle = connect('192.168.2.2:14555', wait_ready = True)  # This is for UDP connection.
+mode_string = "ALT_HOLD"  # There are "MANUAL", "STABILIZE" and "ALT_HOLD" there modes available.
 vehicle.mode = VehicleMode(mode_string)
 
 
@@ -67,7 +76,7 @@ def print_basic_vehicle_parameters(vehicle):
     print " Groundspeed: %s" % vehicle.groundspeed
     print " Airspeed: %s" % vehicle.airspeed
     print " Mode: %s" % vehicle.mode.name
-    print " Is Armable?: %s" % vehicle.is_armable
+    print " Is Armable?: %s" % vehicle.is_armable  # This function is changed in order to fit blurov.
 
 
 def arm_and_takeoff(aTargetAltitude):
@@ -90,7 +99,7 @@ def arm_and_takeoff(aTargetAltitude):
         time.sleep(1)
     '''
     print "Taking off!"
-    vehicle.simple_takeoff(aTargetAltitude) # Take off to target altitude
+    vehicle.simple_takeoff(aTargetAltitude) # Take off to target altitude 
 
     # Wait until the vehicle reaches a safe height before processing the goto 
     # (otherwise the command after Vehicle.simple_takeoff will execute immediately).
@@ -103,7 +112,7 @@ def arm_and_takeoff(aTargetAltitude):
         time.sleep(1)
 
 
-def send_ned_velocity(velocity_x, velocity_y, velocity_z, duration):
+def send_ned_velocity(velocity_x, velocity_y, velocity_z, duration):  # Directly send velocity mavlink command.
 
     msg = vehicle.message_factory.set_position_target_local_ned_encode(
         0,              # time_boot_ms (not used)
@@ -115,8 +124,8 @@ def send_ned_velocity(velocity_x, velocity_y, velocity_z, duration):
         0, 0, 0,        # x, y, z acceleration (not supported yet, ignored in GCS_Mavlink)
         0, 0)           # yaw, yaw_rate (not supported yet, ignored in GCS_Mavlink)
 
-    # send command to vehicle on 1 Hz cycle
-    for x in range(0,duration):
+    # Send command to vehicle on 1 Hz cycle
+    for x in range(0,duration): 
         vehicle.send_mavlink(msg)
         time.sleep(1)
 
@@ -137,7 +146,7 @@ def condition_yaw(heading, relative=False):
         1,              # param 3, direction -1 ccw, 1 cw
         is_relative,    # param 4, relative offset 1, absolute angle 0
         0, 0, 0)        # param 5 ~ 7 not used
-    # send command to vehicle
+    # Send command to vehicle
     vehicle.send_mavlink(msg)
 
 
@@ -176,23 +185,24 @@ def square_path(DURATION):
     send_ned_velocity(0, EAST, 0, DURATION)
     send_ned_velocity(0, 0, 0, 1)
 
-
+'''
 def listen_on_trace(trace):
     while not trace:
         #print ("trace")
         time.sleep(3)
     motion_recall(vehicle, basic_motion.s)
+'''
 
-
-trace = 'n'
+trace = 'n'  # Designed for sending recall signal.
 temp = 'n'
 
 
 # TASK: Supervise the voltage and avoid over-discharging
+# In the real test, usually the voltage is not accurate. This function still needs adjusting.
 initial_voltage = vehicle.battery.voltage
-minimum_voltage = 11.1
+minimum_voltage = 0  # In the real test, change this to 3.5*cell numbers of the battery.
 # t = threading.Thread(target=listen_on_trace(trace), name='ListenOnTrace')
-"""
+
 @vehicle.on_attribute('battery')
 def battery_listener(self, name, msg):
     # print '---%s' % (msg)
@@ -205,34 +215,54 @@ def battery_listener(self, name, msg):
     '''
     if vehicle.battery.voltage < minimum_voltage:
         print "Battery voltage too low."
-        temp = input("Disarm and exit(y or n)?:\n")
-        if temp == 'y':
-            vehicle.armed = False
-            exit()
+        vehicle.armed = False
+        exit()
 
+'''
 @vehicle.on_attribute('attitude')
 def recall_asking(self, name, msg):
     time.sleep(5)
     trace = input("Recall the vehicle(y or n)?:\n")
     if trace == 'y':
         motion.motions_recall(vehicle, basic_motion.s)
-"""
+'''
 
 # TASK: Get all vehicle attributes (state)
 print_basic_vehicle_parameters(vehicle)
 
 
-# TASK: Motions control
+# TASK: Motions control. 
+# You do not need to arm the vehicle like the original dronekit does. 
+# You need to call the MotionControl class and arm the vehicle using the arm function in that class.
 motion = MotionControl(vehicle)
 motion.arm(vehicle, mode_string)
+# If you know how channels.overrides work, you can directly change them here. Not recommanded.
 # vehicle.channels.overrides = {'1':1500, '2':1500, '3':1500, '4':1500, \
 #                               '5':1100, '6':1500, '7':1500, '8':1500}
+'''
 motion.yaw(vehicle, speed=35, duration=1)
+motion.throttle(vehicle, speed=-10, duration=2)
+motion.pitch(vehicle, speed=5, duration=1)
+motion.strafe(vehicle, speed=65, duration=1)
+'''
+
+# In the ALT_HOLD mode, you need to slowly float bluerov before giving other moton commands.
+motion.pitch(vehicle, speed=30, duration=3)
+# Give some time so that depth hold PID control curve becomes stable.
+time.sleep(10)
+
+# Small test, for a square path.
+for i in range(1, 4 + 1):
+    motion.stop(vehicle)
+    motion.throttle(vehicle, speed=50, duration=3.5)
+    motion.yaw(vehicle, speed=65, duration=1.5)
+    
 # print " Channel overrides: %s" % vehicle.channels.overrides
-motion.motions_recall(vehicle, motion.motion_stack)
+# motion.motions_recall(vehicle, motion.motion_stack)
 
 
 '''
+# You can use this for listening to the channel values.
 @vehicle.on_message('RC_CHANNELS_RAW')
 def attitude_listener(self, name, msg):
     print '---%s' % (msg)
@@ -254,7 +284,7 @@ while (not vehicle.armed):
 
 
 # condition_yaw(180)
-time.sleep(10)
+time.sleep(120)
 # TASK: Square path using velocity
 # square_path(1)  # DURITION
 
